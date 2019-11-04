@@ -15,4 +15,6 @@ Given a fan, my code:
 For mathematical reasons, people care about the dimensions of these vector spaces.
 
 ### Products of weights
-By [mathematics](https://arxiv.org/abs/alg-geom/9403002), it has beens shown that there is a product structure on the set of Minkowski weights. I lied a little bit above - a weight is a function on cones of just a single dimension. If the given fan contains cones of dimensions 0, 1, 2, 3, then a weight would be a functions on only rays (dimension 1), for example. 
+By [mathematics](https://arxiv.org/abs/alg-geom/9403002), it has beens shown that there is a product structure on the set of Minkowski weights. I lied a little bit above - a weight is a function on cones of just a single dimension. If the given fan contains cones of dimensions 0, 1, 2, 3, then a weight would be a functions on only rays (dimension 1), for example. Given two balanced weights, it turns out by more mathematics that there is a way to take the product of these functions, and it becomes a weight (assigment of numbers to cones of a different dimensions). 
+
+![Intersection of two fans](fanint.png)
