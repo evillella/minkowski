@@ -119,7 +119,6 @@ class MW:
         self._A_RR = [M.echelon_form() for M in self._A]
         self._bases = [M.T.kernel().basis() for M in self._A]
         self._N = fan.lattice()
-        self._subalgebra_generated = False
         
     def basis(self,k):
         """Returns a basis for MW^k.
@@ -213,67 +212,38 @@ class MW:
         assert (len(w2)==len(self._fan(d2))),"Length of weight 2 does not match length of basis"##replaced by new check weight function
         if d < 0:
             return []
-        else: #will have to compute product and evaluate on all cones of dim d
+        else: #compute product and evaluate on all cones of dim d
             soln = []
             cones = self._fan(d)
             Sigmas = self._fan(d1)
             Taus = self._fan(d2)
 
-            #determine generic v
+            #get a generic v
             v = self._generic(self._fan)
 
             new_weight = []
             for c in cones:
                 # only need to compute m_{sig,tau} for pairs which both contain c as a face
-                sig_c = self._cones_containing(c,Sigmas) #cones in Sigmas which contain c as a face
+                sig_c = self._cones_containing(c,Sigmas)
                 tau_c = self._cones_containing(c,Taus)
 
                 relevant = self._check_generic(sig_c,tau_c,v)
 
                 c_sum = 0
 
-                #for each ordered pair in relevant, compute coefficient m_{sig,tau} = [N:N_sig + N_tau]
+                #for each relevant ordered pair, compute coefficient m_{sig,tau} = [N:N_sig + N_tau]
                 for (sig,tau) in relevant:
                     N_sig = sig.sublattice()
                     N_tau = tau.sublattice()
                     N_sum = self._N.submodule(N_sig.basis()+N_tau.basis()) # computes N_sig + N_tau
 
                     #N_sum.index_in(N) is m_{sig,tau}
-                    # for c(sig), first find location of sig in list of cones of dimension d1, then take corresp. entry of w1
+                    # for c(sig), first find sig in list of dim d1 cones, then take that entry of w1
                     c_sum += N_sum.index_in(self._N)*w1[Sigmas.index(sig)]*w2[Taus.index(tau)]
                 new_weight.append(c_sum)
 
             assert self._check_weight(new_weight,cd),"New weight fails to be balanced or the right size for codimension cd"
-            return new_weight
-        
-    def generate_subalgebra(self):
-        r"""
-        Generates subalgebra from degree one basis. May be time consuming.
-        
-        Computes all possible products of degree one basis elements. Sets subalgebra ranks.
-        
-        """
-        
-        if self._subalgebra_generated:
-            return None# is this what we want?
-        else: #generate the subalgebra
-            B = self.basis(1)
-            l = len(B)
-            W1=WeightedIntegerVectors(1,[1]*l)
-            products = {W1[i]:B[i] for i in range(l)}
-            
-            for d in range(self._dim + 1):#check degree by degree, vanishes above this one
-                W = WeightedIntegerVectors(d,[1]*l)
-                for w in W:
-                    #interpret w in terms of previously computed things
-
-            #for d in range(self._dim + 1):
-                #for w in weights(d):
-                    #compute product
-                    #if zero, keep track
-                #for z in zero_prods:
-                    #fill in dictionary of all products involving this
-            #set boolean to true to indicate subalgebra has been generated
+            return new_weight                    
         
     def __repr__(self):
         r"""
@@ -319,7 +289,6 @@ class MW:
 
         d = tau.dim()
         l = len(self._cones(d+1)) # dimension of vector relations to be returned
-        #print('number of cones of dimension '+str(d+1)+ ' is: ' + str(l))
 
         # tuple of cones of dimension d+1 with tau as facet, i.e., relevant cones
         relevant = tau.facet_of()
@@ -328,7 +297,7 @@ class MW:
         basis = tau.orthogonal_sublattice().basis()
 
         for b in basis: #each b gives relation, i.e., vector in R^l
-            v = [] # vector holding coefficients of relation for given b, at end of loop append to relns and reset
+            v = [] # vector holding coefficients of relation for given b
             for c in self._cones(d+1):# each c gives one component of this vector
                 if c in tau.facet_of():
                     Q = c.relative_quotient(tau)
@@ -364,25 +333,21 @@ class MW:
         
         """
         d = self._dim - cd
-        #print('dimension is: '+str(d))
         ConeList = self._cones(d) #it's a tuple!
         n = len(ConeList)
-        #print(str(n)+' cones of that dimension')
 
-        #generate balancing conditions for every cone of one dimension smaller than d
+        #generate balancing conditions for every cone of dimension d-1
         ConeRelns = self._cones(d-1)
         relations = []
         for c in ConeRelns:
             balance = self._balancing(c)
             for b in balance:
                 relations.append(b)
-        #print(relations)
 
-        #interpret relations, i.e., may be redundant, and determine rank
-        #that is, dimension of space perpendicular to the list of vectors
+        # remove redundant relations, rank = dimension of space perpendicular to the list of vectors
         A = Matrix(relations)
         r = rank(A)
-        # kernel(A.T) gives a basis for the space of MW^cd where coordinates designate coefficients of cones in that place
+        # kernel(A.T) gives a basis for MW^cd where coordinates designate coefficients of cones in that place
         return n-r, A
 
     def _set_ranks_matrices(self):
@@ -431,13 +396,9 @@ class MW:
             False
             
         """
-        #first check that length of w is compatible with codimension cd
-        #if lengths of lists are incompatible, can't multiply these matrices!
         d = self._dim-cd
-        if len(w)!=len(self._fan(d)):
-#            print("incompatible list lengths")
+        if len(w)!=len(self._fan(d)): #list lengths incompatible; can't multiply
             return False        
-        #lengths compatible, multiply matrices
         res = self._A[cd]*Matrix(w).T ##res is a vector of length = num relations, should be zero vector
         return res.is_zero()
     
@@ -453,22 +414,18 @@ class MW:
         """
         d = fan.dim()
 
-        #random candidate for genric vector
-        v = [random() for r in range(d)]
+        v = [random() for r in range(d)] #candidate for generic
 
-        #check whether generic, i.e., v should NOT be contained in any cones of codimension 1
         needToCheck = True
 
         while needToCheck:
-            coneFlag = False #change to true if v in a cone of codim 1
+            coneFlag = False #change to true if v in a cone of codim 1, that makes v NOT generic
             for c in fan.cones(d-1):
                 if v in c:
                     coneFlag = True
-            if coneFlag:
-                #generate new random vector and try again
+            if coneFlag: #try new generic vector
                 v = [random() for r in range(d)]
-            else:
-                #vector v is generic
+            else: #v is generic
                 needToCheck = False
         return v
 
