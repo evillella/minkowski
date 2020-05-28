@@ -30,5 +30,8 @@ To compute the product of two weights, consider the image below.
 
 ![Intersection of two fans](fanint.png)
 
-### Mechanics of balancing conditions
+We consider weights *v* and *w* on the 1-dimensional cones in the blue fan. These cones (or rays) are labeled *sigma_{23}* etc. but we wil refer to this cone as *s_3* for readability (we drop the leading 2 because all cones have it). Now the value of weight *v$ on cone *s_3* is *v(s_3)* becuase weights are functions on cones. This fan contains 2-dimensional cones between adjacent rays, so cone *s_3* has dimension equal to 1 and also codimension equal to 2-1 = 1. Since both *v* and *w* are functions on codimension 1 cones, their product will be a function on cones of codimension 2, that is, on 0-dimensional cones. The origin is the only 0-dimensional cone in a fan. Let's call the origin Z.
 
+To compute the product of *v* and *w*, we need to displace the fan slightly - see the green fan in the image above. The second copy of the fan can be displaced in any direction which doesn't lead to unnecessary overlaps in the fans. In algebraic geometry this is called **generic** - if you randomly displace the fan in the figure above, you'll get two points of overlap. If instead you shifted along one of the rays, there would be an entire ray worth of overlap which is not the generic situation.
+
+Finally, the value of the product of *v* and *w*, evaluated on the cone *Z*, is the sum over places where the blue fan and its generic green displacement intersect. For each intersection, we add up the values of *v* and *w* evaluated on the blue and green fans respectively with a coefficient which essentially measures how straight the cones are in the coordinate system.
